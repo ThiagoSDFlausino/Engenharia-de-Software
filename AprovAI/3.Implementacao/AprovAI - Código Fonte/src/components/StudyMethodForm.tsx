@@ -1,65 +1,23 @@
-import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-
-export interface StudyMethod {
-  id: string;
-  name: string;
-  description: string;
-  duration: number;
-  category: string;
-  benefits: string[];
-  recommendedFor: string;
-}
+import { useStudyMethodForm } from '../hooks';
+import type { StudyMethod, CreateStudyMethodDTO } from '../types';
 
 interface StudyMethodFormProps {
   method?: StudyMethod;
-  onSubmit: (data: Omit<StudyMethod, 'id'>) => void;
+  onSubmit: (data: CreateStudyMethodDTO) => Promise<void>;
   onCancel: () => void;
 }
 
 export function StudyMethodForm({ method, onSubmit, onCancel }: StudyMethodFormProps) {
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    duration: 30,
-    category: 'tecnica-foco',
-    benefits: [''],
-    recommendedFor: ''
-  });
-
-  useEffect(() => {
-    if (method) {
-      setFormData({
-        name: method.name,
-        description: method.description,
-        duration: method.duration,
-        category: method.category,
-        benefits: method.benefits,
-        recommendedFor: method.recommendedFor
-      });
-    }
-  }, [method]);
-
-  const handleBenefitChange = (index: number, value: string) => {
-    const newBenefits = [...formData.benefits];
-    newBenefits[index] = value;
-    setFormData({ ...formData, benefits: newBenefits });
-  };
-
-  const addBenefit = () => {
-    setFormData({ ...formData, benefits: [...formData.benefits, ''] });
-  };
-
-  const removeBenefit = (index: number) => {
-    const newBenefits = formData.benefits.filter((_, i) => i !== index);
-    setFormData({ ...formData, benefits: newBenefits });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const filteredBenefits = formData.benefits.filter(b => b.trim() !== '');
-    onSubmit({ ...formData, benefits: filteredBenefits });
-  };
+  const {
+    formData,
+    isSubmitting,
+    updateField,
+    updateBenefit,
+    addBenefit,
+    removeBenefit,
+    handleSubmit
+  } = useStudyMethodForm({ initialData: method, onSubmit });
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -71,6 +29,7 @@ export function StudyMethodForm({ method, onSubmit, onCancel }: StudyMethodFormP
           <button
             onClick={onCancel}
             className="text-gray-400 hover:text-gray-600 transition-colors"
+            disabled={isSubmitting}
           >
             <X className="w-6 h-6" />
           </button>
@@ -85,9 +44,10 @@ export function StudyMethodForm({ method, onSubmit, onCancel }: StudyMethodFormP
               type="text"
               required
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) => updateField('name', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Ex: Técnica Pomodoro"
+              disabled={isSubmitting}
             />
           </div>
 
@@ -98,10 +58,11 @@ export function StudyMethodForm({ method, onSubmit, onCancel }: StudyMethodFormP
             <textarea
               required
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) => updateField('description', e.target.value)}
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               placeholder="Descreva como funciona o método de estudo..."
+              disabled={isSubmitting}
             />
           </div>
 
@@ -115,8 +76,9 @@ export function StudyMethodForm({ method, onSubmit, onCancel }: StudyMethodFormP
                 required
                 min="1"
                 value={formData.duration}
-                onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
+                onChange={(e) => updateField('duration', parseInt(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isSubmitting}
               />
             </div>
 
@@ -127,8 +89,9 @@ export function StudyMethodForm({ method, onSubmit, onCancel }: StudyMethodFormP
               <select
                 required
                 value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                onChange={(e) => updateField('category', e.target.value as any)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isSubmitting}
               >
                 <option value="tecnica-foco">Técnica de Foco</option>
                 <option value="organizacao">Organização</option>
@@ -149,15 +112,17 @@ export function StudyMethodForm({ method, onSubmit, onCancel }: StudyMethodFormP
                   <input
                     type="text"
                     value={benefit}
-                    onChange={(e) => handleBenefitChange(index, e.target.value)}
+                    onChange={(e) => updateBenefit(index, e.target.value)}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Ex: Aumenta o foco"
+                    disabled={isSubmitting}
                   />
                   {formData.benefits.length > 1 && (
                     <button
                       type="button"
                       onClick={() => removeBenefit(index)}
                       className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      disabled={isSubmitting}
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -167,7 +132,8 @@ export function StudyMethodForm({ method, onSubmit, onCancel }: StudyMethodFormP
               <button
                 type="button"
                 onClick={addBenefit}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50"
+                disabled={isSubmitting}
               >
                 + Adicionar Benefício
               </button>
@@ -182,9 +148,10 @@ export function StudyMethodForm({ method, onSubmit, onCancel }: StudyMethodFormP
               type="text"
               required
               value={formData.recommendedFor}
-              onChange={(e) => setFormData({ ...formData, recommendedFor: e.target.value })}
+              onChange={(e) => updateField('recommendedFor', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Ex: Estudantes com dificuldade de concentração"
+              disabled={isSubmitting}
             />
           </div>
 
@@ -192,15 +159,17 @@ export function StudyMethodForm({ method, onSubmit, onCancel }: StudyMethodFormP
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50"
+              disabled={isSubmitting}
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
+              disabled={isSubmitting}
             >
-              {method ? 'Atualizar' : 'Cadastrar'}
+              {isSubmitting ? 'Salvando...' : method ? 'Atualizar' : 'Cadastrar'}
             </button>
           </div>
         </form>

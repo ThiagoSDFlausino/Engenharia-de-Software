@@ -1,27 +1,12 @@
 import { Clock, Tag, Edit2, Trash2, CheckCircle } from 'lucide-react';
-import { StudyMethod } from './StudyMethodForm';
+import { getCategoryLabel, getCategoryColor } from '../utils/study-method.utils';
+import type { StudyMethod } from '../types';
 
 interface StudyMethodCardProps {
   method: StudyMethod;
   onEdit: (method: StudyMethod) => void;
   onDelete: (id: string) => void;
 }
-
-const categoryLabels: Record<string, string> = {
-  'tecnica-foco': 'Técnica de Foco',
-  'organizacao': 'Organização',
-  'memorizacao': 'Memorização',
-  'revisao': 'Revisão',
-  'criatividade': 'Criatividade'
-};
-
-const categoryColors: Record<string, string> = {
-  'tecnica-foco': 'bg-purple-100 text-purple-700',
-  'organizacao': 'bg-blue-100 text-blue-700',
-  'memorizacao': 'bg-green-100 text-green-700',
-  'revisao': 'bg-orange-100 text-orange-700',
-  'criatividade': 'bg-pink-100 text-pink-700'
-};
 
 export function StudyMethodCard({ method, onEdit, onDelete }: StudyMethodCardProps) {
   return (
@@ -30,9 +15,9 @@ export function StudyMethodCard({ method, onEdit, onDelete }: StudyMethodCardPro
         <div className="flex-1">
           <h3 className="text-lg font-bold text-gray-900 mb-2">{method.name}</h3>
           <div className="flex flex-wrap gap-2 mb-3">
-            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${categoryColors[method.category] || 'bg-gray-100 text-gray-700'}`}>
+            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(method.category)}`}>
               <Tag className="w-3 h-3" />
-              {categoryLabels[method.category] || method.category}
+              {getCategoryLabel(method.category)}
             </span>
             <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
               <Clock className="w-3 h-3" />
